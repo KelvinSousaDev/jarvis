@@ -1,3 +1,4 @@
+import time
 import datetime
 import subprocess
 from langchain_core.tools import tool
@@ -23,24 +24,21 @@ def ver_hora():
 @tool
 def abrir_programa(nome_programa: str):
   """
-    Abre um programa no computador.
-    O argumento 'nome_programa' deve ser um destes: 'chrome', 'bloco de notas', 'calculadora', 'spotify'.
+    Abre QUALQUER programa instalado no Windows.
+    Use para: 'abrir excel', 'abrir discord', 'abrir steam', 'abrir word'.
   """
   
-  programas = {
-    "chrome": "start chrome",
-    "bloco de notas": "notepad",
-    "calculadora": "calc",
-    "spotify": "start spotify" # Funciona se estiver instalado na loja/caminho
-    }
+  try:
+    pyautogui.press("win")
+    time.sleep(1.0)
+    pyautogui.write(nome_programa)
+    time.sleep(1.5)
+    pyautogui.press("enter")
+    return f"Iniciando {nome_programa} via Menu Iniciar."
   
-  chave = nome_programa.lower().strip()
+  except Exception as e:
+    return f"Erro ao tentar abrir o programa: {e}"
 
-  if chave in programas:
-    subprocess.Popen(programas[chave], shell=True)
-    return f"Abrindo {chave} para o senhor."
-  else:
-    return f"Desculpe, não sei como abrir '{nome_programa}' ainda."
 
 @tool
 def pesquisar_internet(pergunta: str):
@@ -80,10 +78,42 @@ def monitorar_sistema():
   return resposta
 
 @tool
+def controlar_sistema(comando: str):
+  """
+    Controla funções do sistema operacional.
+    Comandos aceitos: 'desligar', 'reiniciar', 'volume maximo', 'volume mudo', 'aumentar volume', 'diminuir volume'.
+  """
+  comando = comando.lower().strip()
+
+  if "desligar" in comando:
+    os.system("shutdown /s /t 10")
+    return "Iniciando sequênmcia de desligamento em 10 segundos"
+  
+  elif "reiniciar" in comando:
+    os.system("shutdown /r /t 10")
+    return "Reiniciando sistema em 10 segundos."
+  
+  elif "mudo" in comando:
+    pyautogui.press("volumemute")
+    return "Áudio silenciado."
+  
+  elif "aumentar" in comando:
+    for _ in range(5):
+      pyautogui.press("volumeup")
+    return "Volume aumentado."
+  
+  elif "diminuir" in comando:
+    for _ in range(5):
+      pyautogui.press("volumedown")
+    return "Volume diminuído."
+  
+  return "Comando de sistema não reconhecido."
+
+@tool
 def controlar_midia(comando: str):
   """
     Controla o player de áudio/vídeo que JÁ ESTÁ ABERTO.
-    Use APENAS para comandos de controle: 'pausar', 'retomar' (play), 'proxima', 'anterior', 'aumentar', 'diminuir', 'mudo'.
+    Use APENAS para comandos de controle: 'pausar', 'retomar' (play), 'proxima', 'anterior'.
     NÃO use isso para buscar músicas novas.
   """
 
@@ -92,9 +122,6 @@ def controlar_midia(comando: str):
     "tocar": "playpause",
     "proxima": "nexttrack",
     "anterior": "prevtrack",
-    "aumentar": "volumeup",
-    "diminuir": "volumedown",
-    "mudo": "volumemute"
   }
   comando_limpo = comando.lower().strip()
 
