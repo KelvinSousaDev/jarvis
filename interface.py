@@ -55,12 +55,12 @@ class HUD(ctk.CTk):
       text="ATIVAR", 
       command=self.start_thread,
       width=100,
-      height=25,
+      height=50,
       fg_color="#222222",
       hover_color="#444444",
-      font=("Arial", 10, "bold")
+      font=("Roboto", 12, "bold")
     )
-    self.btn_iniciar.pack(pady=10)
+    self.btn_iniciar.pack(pady=5)
     # Habilidade de Arrastar
     self.bind("<Button-1>", self.comecar_arrastar)
     self.bind("<B1-Motion>", self.arrastar_janela)

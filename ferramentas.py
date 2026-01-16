@@ -9,6 +9,7 @@ import os
 import pywhatkit
 import requests
 from dotenv import load_dotenv
+import psycopg2
 
 load_dotenv()
 
@@ -201,3 +202,39 @@ def verificar_clima(cidade: str) -> str:
   
   except Exception as e:
     return f"Erro de conexão: {str(e)}"
+  
+@tool
+def consultar_vigilante(produto: str):
+  """
+    Busca o preço de um produto monitorado no banco de dados do Vigilante.
+    Use quando o usuário perguntar: 'qual o preço do [produto]', 'quanto tá o [produto]', 'veja no vigilante o [produto]'.
+  """
+
+  url = os.getenv("DATABASE_URL")
+  if not url:
+    return "Erro: A variável DATABASE_URL não foi encontrada no .env."
+  
+  try:
+    conn = psycopg2.connect(url)
+    cursor = conn.cursor()
+
+    query = """
+      SELECT dim.loja, dim.nome_produto, f.valor_coletado, f.data_coleta
+      FROM dim_produtos as dim
+      JOIN fato_precos as f ON dim.id = f.produto_id
+      WHERE dim.nome_produto ILIKE %s
+      ORDER BY dim.id DESC
+      LIMIT 1
+    """
+    cursor.execute(query, (f"%{produto}%",))
+    resultado = cursor.fetchone()
+    conn.close()
+
+    if resultado:
+      loja, nome_produto, valor_coletado, data_coleta = resultado
+      return f"REGISTRO DO VIGILANTE: O produto '{nome_produto}' foi visto no site {loja} por R$ {valor_coletado} em {data_coleta}."
+    else:
+      return f"Vasculhei o banco de dados e não encontrei nenhum registro recente para '{produto}'."
+    
+  except Exception as e:
+    return f"Erro técnico ao consultar o banco de dados: {str(e)}"
