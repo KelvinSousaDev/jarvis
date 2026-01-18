@@ -1,6 +1,5 @@
 import time
 import datetime
-import subprocess
 from langchain_core.tools import tool
 from ddgs import DDGS
 import psutil
@@ -11,6 +10,11 @@ import requests
 from dotenv import load_dotenv
 import psycopg2
 import statistics
+import base64
+import json
+from io import BytesIO
+from PIL import Image
+
 
 load_dotenv()
 
@@ -294,3 +298,45 @@ def analisar_tendencia(produto: str):
   
   except Exception as e:
     return f"Erro ao calcular tendências: {str(e)}"
+  
+@tool
+def ver_tela(pergunta: str):
+  """
+    Captura a tela atual, REDIMENSIONA e envia para o LLaVA analisar.
+    Use quando o usuário disser: 'o que você está vendo?', 'descreva minha tela', 'leia isso'.
+    O parâmetro 'pergunta' deve ser o que o usuário quer saber sobre a imagem (ex: 'Descreva a imagem', 'Qual o erro no código?').
+  """
+
+  print("👁️ Capturando a tela para análise...")
+
+  try:
+    screenshot = pyautogui.screenshot()
+    screenshot.thumbnail((800, 800))
+
+    buffered = BytesIO()
+    screenshot.save(buffered, format="JPEG", quality=80)
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+    url = "http://localhost:11434/api/generate"
+    payload = {
+      "model": "llava",
+      "prompt": pergunta if len(pergunta) > 5 else "Descreva detalhadamente o que você vê nesta imagem da tela.",
+      "stream": False,
+      "images": [img_str]
+    }
+    print("🧠 Enviando para o Lobo Visual (LLaVA)...")
+
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+      resultado = response.json()
+      descricao = resultado.get("response", "Sem resposta visual.")
+      
+      if not descricao or "send an image" in descricao.lower():
+        return "Erro visual: O modelo LLaVA não recebeu a imagem corretamente."
+      
+      return f"RELATÓRIO VISUAL DA TELA: {descricao}"
+    else:
+      return f"Erro na API visual: {response.text}"
+    
+  except Exception as e:
+    return f"Erro ao processar visão: {str(e)}"
