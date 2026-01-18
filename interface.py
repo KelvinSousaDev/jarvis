@@ -14,7 +14,7 @@ class HUD(ctk.CTk):
 
     # Remove Barra de títulos e define a posição da janela
     self.overrideredirect(True)
-    self.geometry("300x150+1000+50")
+    self.geometry("300x170+1000+50")
     self.resizable(False, False)
     # Efeito de Transparência
     self.COR_TRANSPARENTE = "#000001"
@@ -26,12 +26,13 @@ class HUD(ctk.CTk):
     # Desenho do "Olho"
     self.nucleo_visual = ctk.CTkCanvas(
       self.container, 
-      width=40, 
-      height=40, 
+      width=50, 
+      height=50, 
       bg=self.COR_TRANSPARENTE, 
       highlightthickness=0
     )
-    self.circulo_id = self.nucleo_visual.create_oval(2, 2, 38, 38, fill="#333333", outline="")
+    self.nucleo_visual.create_oval(2, 2, 48, 48, outline="#333333", width=2)
+    self.circulo_id = self.nucleo_visual.create_oval(8, 8, 42, 42, fill="#333333", outline="")
     self.nucleo_visual.pack(pady=(10, 5))
     # Texto Informando o Status
     self.label_status = ctk.CTkLabel(
